@@ -16,8 +16,11 @@ class DetailController extends Controller
      */
     public function index()
     {
-        // Devuelve todos los detalles
-        $details = Detail::all();
+        $details = Detail::with([
+            'product',             // producto del detalle
+            'receipt.client'       // recibo con el cliente relacionado
+        ])->get();
+        // $details = Detail::with(['receipt', 'product'])->get(); // Cargar tanto el recibo como el producto relacionado
         return response()->json($details);
     }
 
@@ -35,32 +38,28 @@ class DetailController extends Controller
      */
    public function store(Request $request)
     {
-        // Validamos los datos de entrada
-        $request->validate([
-            'id_product' => 'required|exists:products,id', // Debe existir en la tabla products
-            'id_receipt' => 'required|exists:receipts,id', // Debe existir en la tabla receipts
-            'quantity' => 'required|numeric',
-            'amount' => 'required|numeric',
-            'unit_price' => 'nullable|numeric',
+       $validated = $request->validate([
+            'id_product' => 'required|exists:products,id',
+            'id_receipt' => 'required|exists:receipts,id',
+            'quantity'   => 'required|integer|min:1',
+            'unit_price' => 'nullable|numeric|min:0',
         ]);
 
-        // Obtener el producto utilizando el id_product del request
-        $product = Product::findOrFail($request->id_product); // Aquí corregimos el error
+        $product   = Product::findOrFail($validated['id_product']);
+        $unitPrice = $validated['unit_price'] ?? $product->price;
+        $amount    = $unitPrice * $validated['quantity'];
 
-        // Creamos un nuevo registro en la tabla details
         $detail = Detail::create([
-            'id_product' => $request->id_product,
-            'id_receipt' => $request->id_receipt,
-            'quantity' => $request->quantity,
-            'unit_price' => $product->price, // Calculamos el precio unitario
-            'amount' => $request->quantity *$product->price,  // Calculamos el monto total
+            'id_product' => $validated['id_product'],
+            'id_receipt' => $validated['id_receipt'],
+            'quantity'   => $validated['quantity'],
+            'unit_price' => $unitPrice,
+            'amount'     => $amount,
         ]);
 
-        // Actualizamos el total del recibo después de crear el detalle
-        $this->updateReceiptTotal($request->id_receipt);
+        $this->updateReceiptTotal($validated['id_receipt']);
 
-        // Devolvemos el detalle creado
-        return response()->json($detail, 201);
+        return response()->json($detail->load(['receipt','product']), 201);
     }
 
 
@@ -94,36 +93,29 @@ class DetailController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        // Buscamos el detalle
         $detail = Detail::find($id);
-
-        // Si no se encuentra, retornamos un error 404
         if (!$detail) {
             return response()->json(['message' => 'Detail not found'], 404);
         }
 
-        // Validamos los datos de entrada
-        $request->validate([
-            'id_product' => 'required|exists:products,id', // Debe existir en la tabla products
-            'id_receipt' => 'required|exists:receipts,id', // Debe existir en la tabla receipts
-            'quantity' => 'required|numeric',
-            'amount' => 'required|numeric',
-            'unit_price' => 'nullable|numeric',
+        $validated = $request->validate([
+            'id_product' => 'required|exists:products,id',
+            'id_receipt' => 'required|exists:receipts,id',
+            'quantity'   => 'required|integer|min:1',
+            'unit_price' => 'nullable|numeric|min:0',
         ]);
 
-        // Actualizamos los valores
+        $product   = Product::findOrFail($validated['id_product']);
+        $unitPrice = $validated['unit_price'] ?? $product->price;
+        $amount    = $unitPrice * $validated['quantity'];
+
         $detail->update([
-            'id_product' => $request->id_product,
-            'id_receipt' => $request->id_receipt,
-            'quantity' => $request->quantity,
-            'amount' => $request->amount,
-            'unit_price' => $request->unit_price,
+            'id_product' => $validated['id_product'],
+            'id_receipt' => $validated['id_receipt'],
+            'quantity'   => $validated['quantity'],
+            'unit_price' => $unitPrice,
+            'amount'     => $amount,
         ]);
-
-         // Actualizamos el total del recibo después de actualizar el detalle
-        $this->updateReceiptTotal($request->id_receipt);
-
-        return response()->json($detail);
     }
 
     /**
@@ -131,35 +123,25 @@ class DetailController extends Controller
      */
     public function destroy(string $id)
     {
-        // Buscamos el detalle
-        $detail = Detail::find($id);
-
-        // Si no se encuentra, retornamos un error 404
+         $detail = Detail::find($id);
         if (!$detail) {
             return response()->json(['message' => 'Detail not found'], 404);
         }
 
-        // Eliminamos el registro
+        $receiptId = $detail->id_receipt;
         $detail->delete();
+
+        $this->updateReceiptTotal($receiptId);
 
         return response()->json(['message' => 'Detail deleted successfully']);
     }
 
-    // Este método actualiza el total del recibo.
-    private function updateReceiptTotal($receiptId)
+
+    /** Recalcula el total del recibo */
+    private function updateReceiptTotal(int $receiptId): void
     {
-        // Obtener el recibo
-        $receipt = Receipt::findOrFail($receiptId);
-
-        // Obtener los detalles del recibo y calcular el total
-        $total = $receipt->details->sum(function ($detail) {
-            return $detail->amount; // Sumar los montos de los detalles
-        });
-
-        // Actualizar el total del recibo
-        $receipt->update([
-            'total' => $total,
-        ]);
+        $total = (float) Detail::where('id_receipt', $receiptId)->sum('amount');
+        Receipt::where('id', $receiptId)->update(['total' => $total]);
     }
 
 }

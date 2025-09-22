@@ -12,4 +12,10 @@ class Client extends Model
 
     // Indicar qué campos se pueden llenar
     protected $fillable = ['name', 'email', 'phone'];
+
+    public function receipts()
+    {
+        return $this->hasMany(Receipt::class, 'id_client');
+    }
+
 }

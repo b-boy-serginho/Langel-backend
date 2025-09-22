@@ -3,31 +3,36 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Detail extends Model
 {
     use HasFactory;
 
-    // Especificamos los campos que pueden ser asignados masivamente (mass assignable)
+    // Si tu tabla NO tiene created_at / updated_at, descomenta:
+    // public $timestamps = false;
+
     protected $fillable = [
         'id_product',
         'id_receipt',
         'quantity',
-        'amount',
         'unit_price',
+        'amount',
     ];
 
-    // Relación con el modelo Product (Un detalle pertenece a un producto)
-    public function product()
-    {
-        return $this->belongsTo(Product::class, 'id_product');
-    }
+    protected $casts = [
+        'quantity'   => 'integer',
+        'unit_price' => 'decimal:2',
+        'amount'     => 'decimal:2',
+    ];
 
-    // Relación con el modelo Receipt (Un detalle pertenece a un recibo)
     public function receipt()
     {
         return $this->belongsTo(Receipt::class, 'id_receipt');
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'id_product');
     }
 }

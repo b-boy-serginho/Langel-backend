@@ -13,6 +13,8 @@ class Receipt extends Model
     // Indicar qué campos se pueden llenar
     protected $fillable = ['id_client', 'nro', 'total', 'date',  'hour', 'day', 'description'];
 
+    protected $casts = ['total'=>'decimal:2'];
+
     // Relación con el modelo Product (Un detalle pertenece a un producto)
     public function client()
     {
