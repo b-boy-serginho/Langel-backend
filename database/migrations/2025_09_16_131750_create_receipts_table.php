@@ -16,7 +16,7 @@ return new class extends Migration
 
             $table->unsignedBigInteger('id_client')->nullable();            
             $table->foreign('id_client')->references('id')->on('clients')->onDelete('cascade');
-            $table->string('nro');   
+            $table->string('nro')->nullable();   
             $table->decimal('total', 8, 2);         
             $table->date('date');
             $table->time('hour');  

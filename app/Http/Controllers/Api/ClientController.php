@@ -27,8 +27,8 @@ class ClientController extends Controller
         // Validar los datos de entrada
         $request->validate([
             'name' => 'required|max:255',
-            'email' => 'required|email|unique:clients,email',
-            'phone' => 'nullable|string|max:8',
+            'email' => 'nullable|email|unique:clients,email',
+            'phone' => 'nullable|string',
         ]);
 
         // Crear el cliente
@@ -66,8 +66,8 @@ class ClientController extends Controller
         // Validación antes de actualizar
         $request->validate([
             'name' => 'required|max:255',
-            'email' => 'required|email|unique:clients,email,' . $id,
-            'phone' => 'nullable|string|max:8',
+            'email' => 'nullable|email|unique:clients,email,' . $id,
+            'phone' => 'nullable|string',
         ], [
             'name.required' => 'El nombre es obligatorio.',
             'email.required' => 'El correo electrónico es obligatorio.',
@@ -97,4 +97,6 @@ class ClientController extends Controller
 
         return response()->json(['message' => 'Cliente eliminado']);
     }
+
+    
 }

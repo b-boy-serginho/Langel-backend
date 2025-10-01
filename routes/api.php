@@ -21,4 +21,5 @@ Route::middleware('api')->group(function () {
     Route::resource('products', ProductController::class);
     Route::resource('receipts', ReceiptController::class);
     Route::resource('details', DetailController::class);
+    Route::get('receipts/client/{clientId}', [ReceiptController::class, 'indexByClient']);
 });

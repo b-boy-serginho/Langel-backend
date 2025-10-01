@@ -24,8 +24,9 @@ return new class extends Migration
             $table->foreign('id_receipt')->references('id')->on('receipts')->onDelete('cascade');
 
             $table->decimal('quantity', 8, 2);
-            $table->decimal('amount', 8, 2);
             $table->decimal('unit_price', 8, 2)->nullable();
+            $table->decimal('amount', 8, 2);
+            
             
             $table->timestamps();
         });

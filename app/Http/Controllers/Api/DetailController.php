@@ -91,7 +91,7 @@ class DetailController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+   public function update(Request $request, string $id)
     {
         $detail = Detail::find($id);
         if (!$detail) {
@@ -109,6 +109,7 @@ class DetailController extends Controller
         $unitPrice = $validated['unit_price'] ?? $product->price;
         $amount    = $unitPrice * $validated['quantity'];
 
+        // Actualizamos el detalle
         $detail->update([
             'id_product' => $validated['id_product'],
             'id_receipt' => $validated['id_receipt'],
@@ -116,6 +117,12 @@ class DetailController extends Controller
             'unit_price' => $unitPrice,
             'amount'     => $amount,
         ]);
+
+        // Recalcular el total del recibo
+        $this->updateReceiptTotal($validated['id_receipt']);
+
+        // Devolver el detalle actualizado
+        return response()->json($detail->load(['receipt', 'product']));
     }
 
     /**

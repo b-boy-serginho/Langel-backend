@@ -31,7 +31,7 @@ class ReceiptController extends Controller
     {
         $validated = $request->validate([
             'id_client'   => 'required|exists:clients,id',
-            'nro'         => 'required|string|max:255',
+            'nro'         => 'nullable|string',
             'description' => 'nullable|string',
         ]);
 
@@ -40,7 +40,7 @@ class ReceiptController extends Controller
 
         $receipt = Receipt::create([
             'id_client'   => $validated['id_client'],
-            'nro'         => $validated['nro'],
+            'nro'         => $validated['nro'] ?? null,
             'total'       => 0,
             'date'        => $now->toDateString(),
             'hour'        => $now->format('H:i:s'),
@@ -50,41 +50,7 @@ class ReceiptController extends Controller
 
         return response()->json($receipt->load(['client']), 201);
     }
-
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    // public function store(Request $request)
-    // {
-    //     // Validación de los datos recibidos
-    //     $validated = $request->validate([
-    //         'id_client' => 'required|exists:clients,id',
-    //         'nro' => 'required|string|max:255',
-    //         'description' => 'nullable|string', // description no es obligatorio
-    //     ]);
-
-    //     // Obtener la fecha y hora actual en Bolivia
-    //     $currentDate = now(); // Esto usará la zona horaria de Bolivia configurada en config/app.php
-    //     $dayOfWeek = Carbon::now()->locale('es')->isoFormat('dddd'); // Día de la semana en español
-
-    //     // Crear el nuevo recibo con el total inicializado a 0
-    //     $receipt = Receipt::create([
-    //         'id_client' => $request->id_client,
-    //         'nro' => $validated['nro'],
-    //         'total' => 0,  // Inicializamos el total a 0
-    //         'date' => $currentDate->toDateString(), // solo la fecha
-    //         'hour' => $currentDate->toTimeString(), // solo la hora
-    //         'day' => $dayOfWeek, // Guardamos el día de la semana en español
-    //         'description' => $validated['description'],
-    //     ]);
-
-    //     return response()->json($receipt, 201); // Retorna el recibo creado con un código de estado 201
-    // }
-
-    /**
-     * Display the specified resource.
-     */
+    
     public function show(string $id)
     {
          $receipt = Receipt::with(['client','details.product'])->findOrFail($id);
@@ -108,7 +74,7 @@ class ReceiptController extends Controller
         // Validación de los datos recibidos
         $validated = $request->validate([
             'id_client' => 'required|exists:clients,id',
-            'nro' => 'required|string|max:255',
+            'nro' => 'nullable|string',
             // 'total' => 'required|numeric',
             // 'date' => 'required|date',
             // 'hour' => 'required|date_format:H:i',
@@ -162,4 +128,16 @@ class ReceiptController extends Controller
 
         return response()->json($receipt->fresh(['client','details.product']));
     }
+
+    public function indexByClient($clientId)
+    {
+        // Obtener los recibos solo del cliente con el ID proporcionado
+        $receipts = Receipt::with(['client', 'details.product'])
+            ->where('id_client', $clientId) // Filtramos por el id del cliente
+            ->latest() // Ordenamos por la fecha más reciente
+            ->get();
+
+        return response()->json($receipts);
+    }   
+
 }
