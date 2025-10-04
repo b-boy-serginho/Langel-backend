@@ -41,7 +41,7 @@ class DetailController extends Controller
        $validated = $request->validate([
             'id_product' => 'required|exists:products,id',
             'id_receipt' => 'required|exists:receipts,id',
-            'quantity'   => 'required|integer|min:1',
+            'quantity'   => 'required|numeric|min:1',
             'unit_price' => 'nullable|numeric|min:0',
         ]);
 
@@ -101,7 +101,7 @@ class DetailController extends Controller
         $validated = $request->validate([
             'id_product' => 'required|exists:products,id',
             'id_receipt' => 'required|exists:receipts,id',
-            'quantity'   => 'required|integer|min:1',
+            'quantity'   => 'required|numeric|min:1',
             'unit_price' => 'nullable|numeric|min:0',
         ]);
 
