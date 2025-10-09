@@ -59,7 +59,11 @@ class DetailController extends Controller
 
         $this->updateReceiptTotal($validated['id_receipt']);
 
-        return response()->json($detail->load(['receipt','product']), 201);
+        return response()->json([
+            'message' => 'Detalle creado exitosamente',
+            'detail'  => $detail->load(['receipt','product'])
+        ], 201);
+
     }
 
 
@@ -122,7 +126,10 @@ class DetailController extends Controller
         $this->updateReceiptTotal($validated['id_receipt']);
 
         // Devolver el detalle actualizado
-        return response()->json($detail->load(['receipt', 'product']));
+        return response()->json([
+            'message' => 'Detalle actualizado exitosamente',
+            'detail' => $detail->load(['receipt', 'product'])
+        ]);
     }
 
     /**
@@ -140,7 +147,7 @@ class DetailController extends Controller
 
         $this->updateReceiptTotal($receiptId);
 
-        return response()->json(['message' => 'Detail deleted successfully']);
+         return response()->json(['message' => 'Detalle eliminado exitosamente']);
     }
 
 

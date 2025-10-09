@@ -13,7 +13,9 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $products = Product::all();  // Obtiene todos los productos
+        $products = Product::latest()->get(); // Ordenamos por la fecha más reciente 
+        //  $products = Product::all(); // Ordenamos por la fecha más reciente 
+        // Obtiene todos los productos
         return response()->json($products);  // Devuelve los productos como una respuesta JSON
     }
 
@@ -42,7 +44,10 @@ class ProductController extends Controller
         $product = Product::create($validatedData);
 
         // Devolver respuesta
-        return response()->json($product, 201);  // Devuelve el producto creado con el código 201 (creado)
+        return response()->json([
+            'message' => 'Producto creado exitosamente',
+            'product' => $product
+        ], 201);  // Devuelve el producto creado con el código 201 (creado)
     }
 
     /**
@@ -95,7 +100,10 @@ class ProductController extends Controller
         $product->update($validatedData);
 
         // Devolver el producto actualizado
-        return response()->json($product);
+       return response()->json([
+            'message' => 'Producto actualizado exitosamente',
+            'product' => $product
+        ]);
     }
 
     /**
@@ -115,6 +123,6 @@ class ProductController extends Controller
         $product->delete();
 
         // Devolver respuesta
-        return response()->json(['message' => 'Product deleted successfully']);
+        return response()->json(['message' => 'Producto eliminado exitosamente']);
     }
 }

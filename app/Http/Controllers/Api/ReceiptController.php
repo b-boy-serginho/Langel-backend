@@ -48,7 +48,10 @@ class ReceiptController extends Controller
             'description' => $validated['description'] ?? null,
         ]);
 
-        return response()->json($receipt->load(['client']), 201);
+        return response()->json([
+            'message' => 'Recibo creado exitosamente',
+            'receipt' => $receipt->load(['client'])
+        ], 201);
     }
     
     public function show(string $id)
@@ -99,7 +102,10 @@ class ReceiptController extends Controller
             'day' => $dayOfWeek,  // Día de la semana
         ]);
 
-        return response()->json($receipt);
+        return response()->json([
+            'message' => 'Recibo actualizado exitosamente',
+            'receipt' => $receipt
+        ]);
     }
 
     /**
@@ -113,7 +119,7 @@ class ReceiptController extends Controller
         // Eliminar el recibo
         $receipt->delete();
 
-        return response()->json(null, 204); // Respuesta sin contenido, con código de estado 204
+       return response()->json(['message' => 'Recibo eliminado exitosamente'], 204);// Respuesta sin contenido, con código de estado 204
     }
 
     /**
@@ -126,7 +132,10 @@ class ReceiptController extends Controller
         $total = $receipt->details()->sum('amount'); // << clave
         $receipt->update(['total' => $total]);
 
-        return response()->json($receipt->fresh(['client','details.product']));
+        return response()->json([
+            'message' => 'Total actualizado exitosamente',
+            'receipt' => $receipt->fresh(['client','details.product'])
+        ]);
     }
 
     public function indexByClient($clientId)

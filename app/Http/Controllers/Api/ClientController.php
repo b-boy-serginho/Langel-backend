@@ -14,7 +14,8 @@ class ClientController extends Controller
      */
     public function index()
     {
-        $clients = Client::all();
+        // $clients = Client::all();
+        $clients = Client::latest()->get();
         return response()->json($clients);
     }
 
@@ -48,7 +49,10 @@ class ClientController extends Controller
             return response()->json(['message' => 'Cliente no encontrado'], 404);
         }
 
-        return response()->json($client);
+        return response()->json([
+            'message' => 'Cliente creado exitosamente',
+            'client' => $client
+        ], 201);  // 201 para indicar que se creó correctamente
     }
 
     /**
@@ -78,7 +82,10 @@ class ClientController extends Controller
         // Actualizar el cliente
         $client->update($request->all());
 
-        return response()->json($client);
+         return response()->json([
+            'message' => 'Cliente actualizado exitosamente',
+            'client' => $client
+        ]);
     }
 
     /**
@@ -95,7 +102,7 @@ class ClientController extends Controller
 
         $client->delete();
 
-        return response()->json(['message' => 'Cliente eliminado']);
+         return response()->json(['message' => 'Cliente eliminado exitosamente']);
     }
 
     
