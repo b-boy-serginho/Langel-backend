@@ -138,15 +138,78 @@ class ReceiptController extends Controller
         ]);
     }
 
-    public function indexByClient($clientId)
+    // public function indexByClient($clientId)
+    // {
+    //     // Obtener los recibos solo del cliente con el ID proporcionado
+    //     $receipts = Receipt::with(['client', 'details.product'])
+    //         ->where('id_client', $clientId) // Filtramos por el id del cliente
+    //         ->latest() // Ordenamos por la fecha más reciente
+    //         ->get();
+
+    //     // Agrupar en secciones de 6 recibos cada una
+    //     $perSection = 6;
+    //     $sections = $receipts->chunk($perSection)->values()->map(function ($chunk, $index) {
+    //         return [
+    //             'section' => $index + 1,
+    //             'receipts' => $chunk->values(),
+    //         ];
+    //     });
+
+    //     return response()->json([
+    //         'client_id' => $clientId,
+    //         'per_section' => $perSection,
+    //         'sections' => $sections,
+    //     ]);
+    // }   
+
+    public function indexByClient(Request $request, $clientId)
     {
-        // Obtener los recibos solo del cliente con el ID proporcionado
+        // Validate client exists (opcional pero recomendable)
+        // Client::findOrFail($clientId);
+
+        $perSection = (int) $request->query('pageSize', 6);
+        $page = max(1, (int) $request->query('page', 1));
+
+        // total count (solo cuenta)
+        $total = Receipt::where('id_client', $clientId)->count();
+        $totalSections = (int) ceil($total / max(1, $perSection));
+
         $receipts = Receipt::with(['client', 'details.product'])
-            ->where('id_client', $clientId) // Filtramos por el id del cliente
-            ->latest() // Ordenamos por la fecha más reciente
+            ->where('id_client', $clientId)
+            ->latest()
+            ->skip(($page - 1) * $perSection)
+            ->take($perSection)
             ->get();
 
-        return response()->json($receipts);
-    }   
+        // Suma de 'total' para la sección actual (página)
+        $sectionTotal = $receipts->sum('total');
+
+        // Sumas por cada sección (opcional, calcula todas las secciones)
+        $totalsPluck = Receipt::where('id_client', $clientId)
+            ->latest()
+            ->pluck('total'); // solo trae el campo 'total' para eficiencia
+
+        $sectionsTotals = $totalsPluck
+            ->chunk($perSection)
+            ->values()
+            ->map(function ($chunk, $index) {
+                return [
+                    'section' => $index + 1,
+                    'count' => $chunk->count(),
+                    'sum' => (float) $chunk->sum(),
+                ];
+            });
+
+        return response()->json([
+            'client_id' => $clientId,
+            'page' => $page,
+            'pageSize' => $perSection,
+            'total' => $total,
+            'totalSections' => $totalSections,
+            'sectionTotal' => (float) $sectionTotal,
+            'sectionsTotals' => $sectionsTotals,
+            'receipts' => $receipts,
+        ]);
+    }
 
 }
