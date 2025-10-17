@@ -13,7 +13,8 @@ class CorsMiddleware
         /** @var Response $response */
         $response = $next($request);
 
-        $allowedOrigin = 'http://localhost:5173';
+        $allowedOrigin = $request->headers->get('Origin', '*');
+        // $allowedOrigin = 'http://localhost:5173';
         $response->headers->set('Access-Control-Allow-Origin', $allowedOrigin);
         $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
         $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
